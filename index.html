@@ -61,6 +61,15 @@
             <p>縦は各種目の自己ベスト得点、横は換算先の種目です。</p>
           </div>
         </div>
+        <div class="matrix-toolbar" style="display:flex;justify-content:flex-end;margin:-4px 0 10px">
+          <label class="select-field">
+            <span>行順</span>
+            <select id="matrixSortSelect">
+              <option value="event">種目順</option>
+              <option value="score">スコア高い順</option>
+            </select>
+          </label>
+        </div>
         <div id="matrixWrap" class="matrix-wrap"></div>
       </section>
     </main>
@@ -71,5 +80,64 @@
 
     <script src="scoring-data.js"></script>
     <script src="app.js"></script>
+    <script>
+      (function () {
+        var STORAGE_KEY = "wa-scoring-profile-matrix-sort";
+        var matrixWrap = document.querySelector("#matrixWrap");
+        var select = document.querySelector("#matrixSortSelect");
+        if (!matrixWrap || !select) return;
+
+        select.value = localStorage.getItem(STORAGE_KEY) === "score" ? "score" : "event";
+        select.addEventListener("change", function () {
+          localStorage.setItem(STORAGE_KEY, select.value);
+          sortRows();
+        });
+
+        var sorting = false;
+        var observer = new MutationObserver(function () {
+          if (!sorting) sortRows();
+        });
+        observer.observe(matrixWrap, { childList: true, subtree: true });
+        sortRows();
+
+        function sortRows() {
+          var tbody = matrixWrap.querySelector("tbody");
+          if (!tbody) return;
+
+          var rows = Array.prototype.slice.call(tbody.querySelectorAll("tr"));
+          if (select.value !== "score") {
+            rows.sort(function (a, b) { return getOriginalIndex(a) - getOriginalIndex(b); });
+          } else {
+            rows.sort(function (a, b) {
+              var scoreA = getScore(a);
+              var scoreB = getScore(b);
+              if (scoreA == null && scoreB == null) return getOriginalIndex(a) - getOriginalIndex(b);
+              if (scoreA == null) return 1;
+              if (scoreB == null) return -1;
+              if (scoreA !== scoreB) return scoreB - scoreA;
+              return getOriginalIndex(a) - getOriginalIndex(b);
+            });
+          }
+
+          sorting = true;
+          rows.forEach(function (row) { tbody.appendChild(row); });
+          sorting = false;
+        }
+
+        function getScore(row) {
+          var head = row.querySelector("th");
+          var match = head ? head.textContent.match(/(\d+)\s*pt/) : null;
+          return match ? Number(match[1]) : null;
+        }
+
+        function getOriginalIndex(row) {
+          if (!row.dataset.originalIndex) {
+            var rows = Array.prototype.slice.call(row.parentNode.children);
+            row.dataset.originalIndex = String(rows.indexOf(row));
+          }
+          return Number(row.dataset.originalIndex);
+        }
+      })();
+    </script>
   </body>
 </html>
