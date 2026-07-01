@@ -87,17 +87,16 @@
         var select = document.querySelector("#matrixSortSelect");
         if (!matrixWrap || !select) return;
 
+        var observer = new MutationObserver(sortRows);
+        var observerOptions = { childList: true };
+
         select.value = localStorage.getItem(STORAGE_KEY) === "score" ? "score" : "event";
         select.addEventListener("change", function () {
           localStorage.setItem(STORAGE_KEY, select.value);
           sortRows();
         });
 
-        var sorting = false;
-        var observer = new MutationObserver(function () {
-          if (!sorting) sortRows();
-        });
-        observer.observe(matrixWrap, { childList: true, subtree: true });
+        observer.observe(matrixWrap, observerOptions);
         sortRows();
 
         function sortRows() {
@@ -105,23 +104,26 @@
           if (!tbody) return;
 
           var rows = Array.prototype.slice.call(tbody.querySelectorAll("tr"));
-          if (select.value !== "score") {
-            rows.sort(function (a, b) { return getOriginalIndex(a) - getOriginalIndex(b); });
-          } else {
-            rows.sort(function (a, b) {
-              var scoreA = getScore(a);
-              var scoreB = getScore(b);
-              if (scoreA == null && scoreB == null) return getOriginalIndex(a) - getOriginalIndex(b);
-              if (scoreA == null) return 1;
-              if (scoreB == null) return -1;
-              if (scoreA !== scoreB) return scoreB - scoreA;
-              return getOriginalIndex(a) - getOriginalIndex(b);
-            });
-          }
+          var sorted = rows.slice().sort(function (a, b) {
+            if (select.value !== "score") return getOriginalIndex(a) - getOriginalIndex(b);
 
-          sorting = true;
-          rows.forEach(function (row) { tbody.appendChild(row); });
-          sorting = false;
+            var scoreA = getScore(a);
+            var scoreB = getScore(b);
+            if (scoreA == null && scoreB == null) return getOriginalIndex(a) - getOriginalIndex(b);
+            if (scoreA == null) return 1;
+            if (scoreB == null) return -1;
+            if (scoreA !== scoreB) return scoreB - scoreA;
+            return getOriginalIndex(a) - getOriginalIndex(b);
+          });
+
+          var alreadySorted = sorted.every(function (row, index) {
+            return row === rows[index];
+          });
+          if (alreadySorted) return;
+
+          observer.disconnect();
+          sorted.forEach(function (row) { tbody.appendChild(row); });
+          observer.observe(matrixWrap, observerOptions);
         }
 
         function getScore(row) {
