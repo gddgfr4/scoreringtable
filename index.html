@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>WA Scoring Table Profile</title>
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <header class="app-header">
+      <div>
+        <p class="eyebrow">World Athletics Scoring Tables 2025</p>
+        <h1>Track Score Profile</h1>
+      </div>
+      <div class="top-controls" aria-label="表示設定">
+        <label class="select-field">
+          <span>性別</span>
+          <select id="genderSelect">
+            <option value="men">Men</option>
+            <option value="women">Women</option>
+          </select>
+        </label>
+        <label class="switch">
+          <input id="logAxisToggle" type="checkbox" />
+          <span>距離を対数軸にする</span>
+        </label>
+        <button id="sampleButton" type="button">サンプル</button>
+        <button id="clearButton" type="button" class="secondary">クリア</button>
+      </div>
+    </header>
+
+    <main>
+      <section class="input-section" aria-labelledby="inputTitle">
+        <div class="section-heading">
+          <div>
+            <h2 id="inputTitle">自己ベスト入力</h2>
+            <p>100mから10000mまでのタイムを入力すると、WA得点と換算表が更新されます。</p>
+          </div>
+          <p class="format-note">入力例: 10.88 / 1:58.40 / 31:25.00</p>
+        </div>
+        <div id="eventInputs" class="event-grid"></div>
+      </section>
+
+      <section class="chart-section" aria-labelledby="chartTitle">
+        <div class="section-heading compact">
+          <div>
+            <h2 id="chartTitle">得点グラフ</h2>
+            <p id="chartSummary">入力された種目の得点を距離順につなぎます。</p>
+          </div>
+        </div>
+        <div class="chart-wrap">
+          <canvas id="scoreChart" aria-label="種目別WA得点グラフ"></canvas>
+          <div id="chartEmpty" class="empty-state">2種目以上入力すると折れ線が表示されます。</div>
+        </div>
+      </section>
+
+      <section class="matrix-section" aria-labelledby="matrixTitle">
+        <div class="section-heading compact">
+          <div>
+            <h2 id="matrixTitle">得点別換算表</h2>
+            <p>縦は各種目の自己ベスト得点、横は換算先の種目です。</p>
+          </div>
+        </div>
+        <div id="matrixWrap" class="matrix-wrap"></div>
+      </section>
+    </main>
+
+    <footer>
+      <p>WA配布PDFから抽出した表を使っています。公式表に空欄がある点数は、前後の公式値から補間して「≈」を付けます。</p>
+    </footer>
+
+    <script src="scoring-data.js"></script>
+    <script src="app.js"></script>
+  </body>
+</html>
